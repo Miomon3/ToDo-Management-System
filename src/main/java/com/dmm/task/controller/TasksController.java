@@ -106,8 +106,12 @@ public class TasksController {
 	}
 	
 	// 投稿の新規登録
-	@GetMapping("/main/create/{date}")
-	public String create(Model model, @PathVariable LocalDate date) {
+	@GetMapping("/main/create/{yyyy-MM-dd}")
+	public String create(Model model) {
+		
+		CreateForm createForm = new CreateForm();
+        model.addAttribute("CreateForm", createForm);
+        
 		return "create";
 	}
 	
@@ -128,6 +132,10 @@ public class TasksController {
 	// 投稿の編集
 	@GetMapping("/main/edit/{id}")
 	public String edit(Model model, @PathVariable Integer id) {
+		
+		CreateForm createForm = new CreateForm();
+        model.addAttribute("CreateForm", createForm);
+        
 		return "edit";
 	}
 	
@@ -139,6 +147,7 @@ public class TasksController {
 		task.setTitle(editForm.getTitle());
 		task.setDate(editForm.getDate());
 		task.setText(editForm.getText());
+		task.setDone(editForm.getDone());
 
 		repo.save(task);
 
