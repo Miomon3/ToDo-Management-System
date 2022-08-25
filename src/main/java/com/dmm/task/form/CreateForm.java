@@ -15,5 +15,7 @@ public class CreateForm {
 	private LocalDate date;
 
 	private String text;
+	
+	private boolean done;
 
 }

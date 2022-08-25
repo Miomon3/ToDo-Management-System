@@ -123,6 +123,8 @@ public class TasksController {
 		task.setTitle(createForm.getTitle());
 		task.setDate(createForm.getDate());
 		task.setText(createForm.getText());
+		task.setDone(createForm.isDone());
+		//task.setDone(false);
 
 		repo.save(task);
 
@@ -131,10 +133,10 @@ public class TasksController {
 	
 	// 投稿の編集
 	@GetMapping("/main/edit/{id}")
-	public String edit(Model model, @PathVariable Integer id) {
+	public String edit(Model model) {
 		
-		CreateForm createForm = new CreateForm();
-        model.addAttribute("CreateForm", createForm);
+		EditForm editForm = new EditForm();
+        model.addAttribute("EditForm", editForm);
         
 		return "edit";
 	}
@@ -147,7 +149,7 @@ public class TasksController {
 		task.setTitle(editForm.getTitle());
 		task.setDate(editForm.getDate());
 		task.setText(editForm.getText());
-		task.setDone(editForm.getDone());
+		task.setDone(editForm.isDone());
 
 		repo.save(task);
 
