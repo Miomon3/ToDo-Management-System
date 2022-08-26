@@ -105,6 +105,7 @@ public class TasksController {
 		return "main";
 	}
 	
+	
 	// 投稿の新規登録
 	@GetMapping("/main/create/{yyyy-MM-dd}")
 	public String create(Model model) {
@@ -123,20 +124,21 @@ public class TasksController {
 		task.setTitle(createForm.getTitle());
 		task.setDate(createForm.getDate());
 		task.setText(createForm.getText());
-		task.setDone(createForm.isDone());
-		//task.setDone(false);
+		//task.setDone(createForm.isDone());
+		task.setDone(false);
 
 		repo.save(task);
 
 		return "redirect:/main";
 	}
 	
+	
 	// 投稿の編集
 	@GetMapping("/main/edit/{id}")
-	public String edit(Model model) {
+	public String edit(Model model, @PathVariable Integer id) {
 		
-		EditForm editForm = new EditForm();
-        model.addAttribute("EditForm", editForm);
+		Tasks task = repo.getById(id);
+		model.addAttribute("task", task);
         
 		return "edit";
 	}
@@ -145,6 +147,7 @@ public class TasksController {
 	public String editPost(EditForm editForm, @AuthenticationPrincipal AccountUserDetails user, Model model, @PathVariable Integer id) {
 		
 		Tasks task = new Tasks();
+		task.setId(id);
 		task.setName(user.getName());
 		task.setTitle(editForm.getTitle());
 		task.setDate(editForm.getDate());
@@ -155,6 +158,7 @@ public class TasksController {
 
 		return "redirect:/main";
 	}
+	
 	
 	// 投稿の削除
 	@PostMapping("/main/delete/{id}")
