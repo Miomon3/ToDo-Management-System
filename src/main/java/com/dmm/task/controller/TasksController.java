@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -23,39 +25,55 @@ import com.dmm.task.service.AccountUserDetails;
 
 @Controller
 public class TasksController {
-	
+
 	@Autowired
 	private TasksRepository repo;
-	
+
 	// カレンダータスクの一覧表示
 	@GetMapping("/main")
-	public String mainTasks(Model model) {
-		
+	public String mainTasks(Model model, @AuthenticationPrincipal AccountUserDetails user,
+			@DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date) {
+
 		MultiValueMap<LocalDate, Tasks> tasks = new LinkedMultiValueMap<LocalDate, Tasks>();
-		List<Tasks> taskList = repo.findAll();
-		
+		List<Tasks> taskList;
+		if (user.getAuthorities().stream().map(GrantedAuthority::getAuthority).anyMatch(a -> a.equals("ROLE_ADMIN"))) {
+			taskList = repo.findAll();
+		} else {
+			taskList = repo.findByName(String.valueOf(user.getName()));
+		}
+
 		List<List<LocalDate>> matrix = new ArrayList<>();
 		List<LocalDate> week = new ArrayList<>();
 
 		matrix.add(week);
-		
+
 		LocalDate x;
 		DayOfWeek y;
 
-		x = LocalDate.now();
+		if (date == null) {
+			x = LocalDate.now();
+		} else {
+			x = date;
+		}
+
+		// 月表示とリンク
+		model.addAttribute("prev", x.minusMonths(1));
+		model.addAttribute("month", x.getYear() + "年" + x.getMonthValue() + "月");
+		model.addAttribute("next", x.plusMonths(1));
+
 		x = LocalDate.of(x.getYear(), x.getMonthValue(), 1);
 		y = x.getDayOfWeek();
-		
+
 		x = x.minusDays(y.getValue());
-		
+
 		// 1週目
 		for (int i = 0; i < 7; i++) {
 			week.add(x);
 			x = x.plusDays(1);
-			for(int j = 0; j < taskList.size(); j++) {
-                if(taskList.get(j).getDate().isEqual(x)) {
-                        tasks.add(x, taskList.get(j));
-                }
+			for (int j = 0; j < taskList.size(); j++) {
+				if (taskList.get(j).getDate().isEqual(x)) {
+					tasks.add(x, taskList.get(j));
+				}
 			}
 		}
 
@@ -70,10 +88,10 @@ public class TasksController {
 				matrix.add(week);
 			}
 			x = x.plusDays(1);
-			for(int j = 0; j < taskList.size(); j++) {
-                if(taskList.get(j).getDate().isEqual(x)) {
-                        tasks.add(x, taskList.get(j));
-                }
+			for (int j = 0; j < taskList.size(); j++) {
+				if (taskList.get(j).getDate().isEqual(x)) {
+					tasks.add(x, taskList.get(j));
+				}
 			}
 		}
 
@@ -82,40 +100,32 @@ public class TasksController {
 		for (int i = 0; i < 7 - y.getValue(); i++) {
 			week.add(x);
 			x = x.plusDays(1);
-			for(int j = 0; j < taskList.size(); j++) {
-                if(taskList.get(j).getDate().isEqual(x)) {
-                        tasks.add(x, taskList.get(j));
-                }
+			for (int j = 0; j < taskList.size(); j++) {
+				if (taskList.get(j).getDate().isEqual(x)) {
+					tasks.add(x, taskList.get(j));
+				}
 			}
 		}
-		
+
 		model.addAttribute("matrix", matrix);
 		model.addAttribute("tasks", tasks);
-		
-		LocalDate today;
-		today = LocalDate.now();
-		
-		model.addAttribute("prev", today.minusMonths(1));
-		model.addAttribute("month", today.getYear() + "年" + today.getMonthValue() + "月");
-		model.addAttribute("next", today.plusMonths(1));
 		
 		CreateForm createForm = new CreateForm();
 		model.addAttribute("createForm", createForm);
 
 		return "main";
 	}
-	
-	
+
 	// 投稿の新規登録
 	@GetMapping("/main/create/{yyyy-MM-dd}")
 	public String create(Model model) {
-		
+
 		CreateForm createForm = new CreateForm();
-        model.addAttribute("CreateForm", createForm);
-        
+		model.addAttribute("CreateForm", createForm);
+
 		return "create";
 	}
-	
+
 	@PostMapping("/main/create")
 	public String createPost(CreateForm createForm, @AuthenticationPrincipal AccountUserDetails user, Model model) {
 
@@ -124,28 +134,28 @@ public class TasksController {
 		task.setTitle(createForm.getTitle());
 		task.setDate(createForm.getDate());
 		task.setText(createForm.getText());
-		//task.setDone(createForm.isDone());
+		// task.setDone(createForm.isDone());
 		task.setDone(false);
 
 		repo.save(task);
 
 		return "redirect:/main";
 	}
-	
-	
+
 	// 投稿の編集
 	@GetMapping("/main/edit/{id}")
 	public String edit(Model model, @PathVariable Integer id) {
-		
+
 		Tasks task = repo.getById(id);
 		model.addAttribute("task", task);
-        
+
 		return "edit";
 	}
-	
+
 	@PostMapping("/main/edit/{id}")
-	public String editPost(EditForm editForm, @AuthenticationPrincipal AccountUserDetails user, Model model, @PathVariable Integer id) {
-		
+	public String editPost(EditForm editForm, @AuthenticationPrincipal AccountUserDetails user, Model model,
+			@PathVariable Integer id) {
+
 		Tasks task = new Tasks();
 		task.setId(id);
 		task.setName(user.getName());
@@ -158,13 +168,12 @@ public class TasksController {
 
 		return "redirect:/main";
 	}
-	
-	
+
 	// 投稿の削除
 	@PostMapping("/main/delete/{id}")
 	public String deletePost(@PathVariable Integer id) {
 		repo.deleteById(id);
 		return "redirect:/main";
 	}
-	
+
 }

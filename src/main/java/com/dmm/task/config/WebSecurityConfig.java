@@ -15,7 +15,7 @@ import com.dmm.task.service.AccountUserDetailsService;
 
 @Configuration // 設定を行うクラスであることを指定
 @EnableWebSecurity // Spring Securityを利用することを指定
-@EnableGlobalMethodSecurity(prePostEnabled = true) // 追記 メソッド認可処理を有効化
+@EnableGlobalMethodSecurity(prePostEnabled = true) // メソッド認可処理を有効化
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 	@Autowired
 	private AccountUserDetailsService userDetailsService;
@@ -31,7 +31,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 		auth.userDetailsService(userDetailsService).passwordEncoder(passwordEncoder());
 		super.configure(auth);
 	}
-	
+
 	@Override
 	public void configure(WebSecurity web) throws Exception {
 		// 画像、JavaScript、cssは認可の対象外とする
@@ -41,10 +41,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 	@Override
 	protected void configure(HttpSecurity http) throws Exception {
 		// 認可の設定
-		http.exceptionHandling() // 追記
-				.accessDeniedPage("/loginForm") // 追記 アクセス拒否された時に遷移するパス
-				.and() // 追記
-				.authorizeRequests().antMatchers("/loginForm").permitAll().anyRequest().authenticated(); // loginForm以外は、認証を求める
+		http.exceptionHandling().accessDeniedPage("/loginForm") // アクセス拒否された時に遷移するパス
+				.and().authorizeRequests().antMatchers("/loginForm").permitAll().anyRequest().authenticated(); // loginForm以外は、認証を求める
 
 		// ログイン設定
 		http.formLogin() // フォーム認証の有効化
