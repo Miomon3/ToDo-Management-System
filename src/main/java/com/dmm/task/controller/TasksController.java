@@ -117,8 +117,10 @@ public class TasksController {
 	}
 
 	// 投稿の新規登録
-	@GetMapping("/main/create/{yyyy-MM-dd}")
-	public String create(Model model) {
+	@GetMapping("/main/create/{date}")
+	public String create(Model model, @DateTimeFormat(pattern="yyyy-MM-dd") @PathVariable LocalDate date) {
+		
+		model.addAttribute("day", date);
 
 		CreateForm createForm = new CreateForm();
 		model.addAttribute("CreateForm", createForm);
